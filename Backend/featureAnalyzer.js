@@ -50,7 +50,6 @@ async function analyzeFeatures(images, context) {
     const response = await result.response;
     const text = response.text();
     console.log(text)
-    // console.log(processResponse(text));
     return text;
   } catch (error) {
     console.error('Error calling Gemini API:', error);
@@ -58,23 +57,5 @@ async function analyzeFeatures(images, context) {
   }
 }
 
-function processResponse(text) {
-    const features = [];
-    const featureRegex = /\*\*[\d]+\.\s(.*?)\*\*\n\n\* \*\*Functionality:\*\* (.*?)\n\* \*\*User Interactions:\*\* (.*?)\n\* \*\*Edge Cases:\*\* (.*?)(?=\n\n\*\*[\d]+\.\s|$)/gs;
-    let match;
-    
-    while ((match = featureRegex.exec(text)) !== null) {
-      const feature = {
-        name: match[1].trim(),
-        functionality: match[2].trim(),
-        userInteractions: match[3].trim(),
-        edgeCases: match[4].trim()
-      };
-  
-      features.push(feature);
-    }
-  
-    return features;
-  }
 
 module.exports = { analyzeFeatures };
