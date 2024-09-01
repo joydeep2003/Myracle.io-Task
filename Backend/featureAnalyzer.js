@@ -1,28 +1,80 @@
-const axios = require('axios');
 const fs = require('fs');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+require('dotenv').config();
+
+async function getPrepromptedModel() {
+  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+  const chat = model.startChat({
+    history: [
+      {
+        role: "user",
+        parts: [{ text: "You are an expert UI/UX analyst specializing in mobile app features. Your task is to analyze screenshots of any mobile app and provide detailed descriptions of its features. Focus on functionality, user interactions, and potential edge cases." }]
+      },
+      {
+        role: "model",
+        parts: [{ text: "Understood. I'm ready to analyze mobile app screenshots and provide detailed descriptions of features, focusing on functionality, user interactions, and potential edge cases. I'll identify and describe key features such as navigation, selection processes, information display, and any unique elements specific to the app. Please provide the screenshots and any additional context, and I'll begin the analysis." }]
+      }
+    ],
+  });
+  return chat;
+}
 
 async function analyzeFeatures(images, context) {
-  // This is a placeholder for the actual multimodal LLM integration
-  // You would need to replace this with the appropriate API call to your chosen LLM
-
-  const imageData = images.map(image => {
-    return fs.readFileSync(image.path, { encoding: 'base64' });
-  });
-
-  const prompt = `Analyze the following screenshots of the Red Bus mobile app, focusing on the bus selection feature. Describe each feature, including its functionality, user interactions, and potential edge cases. Context: ${context}`;
-
   try {
-    // Replace this with your actual LLM API call
-    const response = await axios.post('https://your-llm-api-endpoint.com/analyze', {
-      prompt,
-      images: imageData
-    });
+    const chat = await getPrepromptedModel();
 
-    return response.data.features;
+    const prompt = `Analyze the following screenshots of a mobile app. Describe each feature you can identify, including its functionality, user interactions, and potential edge cases. Pay special attention to:
+    1. Navigation and Selection processes
+    2. Information Display
+    3. User Input Methods
+    4. Special Features or Unique Elements
+
+    For each feature, provide:
+    - Functionality: What the feature does
+    - User Interactions: How users interact with it
+    - Edge Cases: Possible issues or limitations
+
+    Client Context (if this is present, give priority to this context) : ${context}
+
+    Please structure your response in a clear, bullet-point format for each feature.`;
+
+    const imageParts = images.map(image => ({
+      inlineData: {
+        data: fs.readFileSync(image.path).toString('base64'),
+        mimeType: image.mimetype
+      }
+    }));
+    console.log("Sent to API")
+    const result = await chat.sendMessage([prompt, ...imageParts]);
+    const response = await result.response;
+    const text = response.text();
+    console.log(text)
+    // console.log(processResponse(text));
+    return text;
   } catch (error) {
-    console.error('Error calling LLM API:', error);
+    console.error('Error calling Gemini API:', error);
     throw error;
   }
 }
+
+function processResponse(text) {
+    const features = [];
+    const featureRegex = /\*\*[\d]+\.\s(.*?)\*\*\n\n\* \*\*Functionality:\*\* (.*?)\n\* \*\*User Interactions:\*\* (.*?)\n\* \*\*Edge Cases:\*\* (.*?)(?=\n\n\*\*[\d]+\.\s|$)/gs;
+    let match;
+    
+    while ((match = featureRegex.exec(text)) !== null) {
+      const feature = {
+        name: match[1].trim(),
+        functionality: match[2].trim(),
+        userInteractions: match[3].trim(),
+        edgeCases: match[4].trim()
+      };
+  
+      features.push(feature);
+    }
+  
+    return features;
+  }
 
 module.exports = { analyzeFeatures };

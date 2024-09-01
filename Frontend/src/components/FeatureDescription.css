@@ -1,0 +1,36 @@
+.feature-description {
+    width: 100%;
+    margin-top: 2rem;
+  }
+  
+  .feature-paper {
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 10px !important;
+  }
+  
+  .feature-paper h4 {
+    margin-bottom: 1rem;
+    color: #00bcd4;
+  }
+  
+  .feature-paper p {
+    color: #e0e0e0;
+  }
+  
+  .feature-paper ul, .feature-paper ol {
+    padding-left: 1.5rem;
+  }
+  
+  .feature-paper li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .feature-paper code {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+  

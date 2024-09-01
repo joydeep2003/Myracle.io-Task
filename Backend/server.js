@@ -38,8 +38,8 @@ app.post('/analyze', upload.array('images'), async (req, res) => {
   try {
     const images = req.files;
     const context = req.body.context;
-    const features = await analyzeFeatures(images, context);
-    res.json(features);
+    const text = await analyzeFeatures(images, context);
+    res.json(text);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'An error occurred during analysis' });
